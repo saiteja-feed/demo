@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven'   // Configure Maven in Jenkins Global Tool Configuration
+    }
+
+    stages {
+        stage('Clone') {
+            steps {
+                git 'https://github.com/YOUR-USERNAME/demo-app.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean compile'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('Package') {
+            steps {
+                sh 'mvn package'
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t demo-app:latest .'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'docker run -d -p 8081:8080 --name demo-app demo-app:latest'
+            }
+        }
+    }
+}
